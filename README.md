@@ -70,19 +70,20 @@ K = make_linear_motion_kernel(L, theta)
 I_blur = conv2d_same(I_rain, K)  # normalized kernel
 
 ```
-用線性運動模糊核卷積影像，核長 (L)、角度 (\theta)，核須歸一化。
+用線性運動模糊核卷積影像，核長 (L)、角度 <img width="12" height="22" alt="Screenshot 2025-09-29 at 9 44 30 PM" src="https://github.com/user-attachments/assets/ad9843cd-27be-4e42-840d-b0d9755657fb" />，核須歸一化。
 
 ---
 
 ### 1.6 Sensor noise / 感測雜訊
 
 <img width="570" height="98" alt="Screenshot 2025-09-29 at 9 32 43 PM" src="https://github.com/user-attachments/assets/e8ae6214-ed2d-4623-8688-16f98e2b0aa3" />
+
 ```python
 sigma = args.noise_std  # >>> EDIT HERE <<<
 noise = torch.randn_like(I_blur) * sigma
 Id = (I_blur + noise).clamp(0,1)
 ```
-加入高斯雜訊並夾住範圍，得到退化影像 (I_d)。**配對標註**即為 (GT=C)。
+加入高斯雜訊並夾住範圍，得到退化影像 <img width="22" height="27" alt="Screenshot 2025-09-29 at 9 45 17 PM" src="https://github.com/user-attachments/assets/09323340-655e-4398-9e88-f99bc6172cab" />。**配對標註**即為 (GT=C)。
 
 ---
 
