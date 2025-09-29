@@ -251,3 +251,8 @@ SSIM (windowed) with constants (C_1, C_2):
 * **Heads**: add/remove `nn.Sigmoid()` to control range.
 * **Residual compose**: the final `clamp(0,1)` is recommended.
 
+<img width="450" height="105" alt="image" src="https://github.com/user-attachments/assets/7c2edc79-d946-4561-9a16-4f856ef54e38" />
+
+<img width="450" height="105" alt="image" src="https://github.com/user-attachments/assets/ac21d842-a79b-4c33-9c40-f3537a025204" />
+
+<img width="446" height="104" alt="image" src="https://github.com/user-attachments/assets/684079cc-1d98-488f-8e27-5eacdde24958" />
