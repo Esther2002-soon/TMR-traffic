@@ -21,7 +21,7 @@ NightCity dataset
 
 ### 1.2 Rain layer estimation / 雨層估計
 
-We estimate a rain-only layer by a simple positive residual between a rainy image (I^{\text{rainy}}) and its clean mate (I^{\text{clean}}) (both in ([0,1])):
+We estimate a rain-only layer by a simple positive residual between a rainy image <img width="51" height="32" alt="Screenshot 2025-09-29 at 9 42 28 PM" src="https://github.com/user-attachments/assets/e136515d-7ab6-4f4e-baed-dae966ef9805" /> and its clean mate <img width="174" height="28" alt="Screenshot 2025-09-29 at 9 42 45 PM" src="https://github.com/user-attachments/assets/814717b3-4277-4cd6-bece-2450778e927d" />
 <img width="283" height="47" alt="Screenshot 2025-09-29 at 9 30 37 PM" src="https://github.com/user-attachments/assets/d7992b56-4837-41b7-9f5a-1e17679f3869" />
 ```python
 R = (rainy - clean).clamp(0, 1)   # thresholding if needed
@@ -36,7 +36,7 @@ Nighttime low illumination is synthesized by gamma compression:
 <img width="557" height="102" alt="Screenshot 2025-09-29 at 9 31 01 PM" src="https://github.com/user-attachments/assets/ff660549-c34a-4b76-8f41-5813830ab906" />
 
 ```python
-gamma = random.uniform(args.gamma_min, args.gamma_max)  # >>> EDIT HERE <<<
+gamma = random.uniform(args.gamma_min, args.gamma_max)
 I_gamma = C.clamp(0,1).pow(gamma)
 ```
 用冪次<img width="75" height="27" alt="Screenshot 2025-09-29 at 9 31 17 PM" src="https://github.com/user-attachments/assets/4f860776-3ea0-458b-b8ea-1d405cb877da" />將影像壓暗，模擬低照度。
