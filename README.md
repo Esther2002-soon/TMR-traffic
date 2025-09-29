@@ -23,9 +23,6 @@ NightCity dataset
 
 We estimate a rain-only layer by a simple positive residual between a rainy image <img width="51" height="32" alt="Screenshot 2025-09-29 at 9 42 28 PM" src="https://github.com/user-attachments/assets/e136515d-7ab6-4f4e-baed-dae966ef9805" /> and its clean mate <img width="174" height="28" alt="Screenshot 2025-09-29 at 9 42 45 PM" src="https://github.com/user-attachments/assets/814717b3-4277-4cd6-bece-2450778e927d" />
 <img width="283" height="47" alt="Screenshot 2025-09-29 at 9 30 37 PM" src="https://github.com/user-attachments/assets/d7992b56-4837-41b7-9f5a-1e17679f3869" />
-```python
-R = (rainy - clean).clamp(0, 1)   # thresholding if needed
-```
 由雨天影像與乾淨影像相減取正值，得到雨層 (R)，再夾住於 ([0,1])。
 
 ---
@@ -34,11 +31,6 @@ R = (rainy - clean).clamp(0, 1)   # thresholding if needed
 
 Nighttime low illumination is synthesized by gamma compression:
 <img width="557" height="102" alt="Screenshot 2025-09-29 at 9 31 01 PM" src="https://github.com/user-attachments/assets/ff660549-c34a-4b76-8f41-5813830ab906" />
-
-```python
-gamma = random.uniform(args.gamma_min, args.gamma_max)
-I_gamma = C.clamp(0,1).pow(gamma)
-```
 用冪次<img width="75" height="27" alt="Screenshot 2025-09-29 at 9 31 17 PM" src="https://github.com/user-attachments/assets/4f860776-3ea0-458b-b8ea-1d405cb877da" />將影像壓暗，模擬低照度。
 
 ---
@@ -50,10 +42,6 @@ We blend the rain layer additively with a strength <img width="93" height="25" a
 
 (Optionally alpha-composite via a luminance mask (A) if your code supports it:
 <img width="374" height="36" alt="Screenshot 2025-09-29 at 9 32 00 PM" src="https://github.com/user-attachments/assets/443af6b0-e4d9-43e9-a383-03c6927ae5f2" />
-```python
-s = random.uniform(0.5, 1.0)  # >>> EDIT HERE <<<
-I_rain = (I_gamma + s*R).clamp(0,1)
-```
 以強度 (s) 將雨層加到暗化後影像上；可改為 alpha 合成。
 
 ---
@@ -62,14 +50,6 @@ I_rain = (I_gamma + s*R).clamp(0,1)
 
 Convolve with a random linear motion kernel (K) of length (L) and angle (\theta):
 <img width="469" height="47" alt="Screenshot 2025-09-29 at 9 32 20 PM" src="https://github.com/user-attachments/assets/7050ba37-0d41-445d-ba90-2b9c427016df" />
-
-```python
-L = random.randint(args.blur_len_min, args.blur_len_max)  # >>> EDIT HERE <<<
-theta = random.uniform(0,180)
-K = make_linear_motion_kernel(L, theta)
-I_blur = conv2d_same(I_rain, K)  # normalized kernel
-
-```
 用線性運動模糊核卷積影像，核長 (L)、角度 <img width="12" height="22" alt="Screenshot 2025-09-29 at 9 44 30 PM" src="https://github.com/user-attachments/assets/ad9843cd-27be-4e42-840d-b0d9755657fb" />，核須歸一化。
 
 ---
@@ -77,12 +57,6 @@ I_blur = conv2d_same(I_rain, K)  # normalized kernel
 ### 1.6 Sensor noise / 感測雜訊
 
 <img width="570" height="98" alt="Screenshot 2025-09-29 at 9 32 43 PM" src="https://github.com/user-attachments/assets/e8ae6214-ed2d-4623-8688-16f98e2b0aa3" />
-
-```python
-sigma = args.noise_std  # >>> EDIT HERE <<<
-noise = torch.randn_like(I_blur) * sigma
-Id = (I_blur + noise).clamp(0,1)
-```
 加入高斯雜訊並夾住範圍，得到退化影像 <img width="22" height="27" alt="Screenshot 2025-09-29 at 9 45 17 PM" src="https://github.com/user-attachments/assets/09323340-655e-4398-9e88-f99bc6172cab" />。**配對標註**即為 (GT=C)。
 
 ---
@@ -134,10 +108,6 @@ A depthwise conv (W_d) followed by pointwise (1\times1) conv (W_p) and activatio
 
 <img width="277" height="75" alt="Screenshot 2025-09-29 at 9 35 15 PM" src="https://github.com/user-attachments/assets/3504be92-d382-4283-b356-4be3f2755109" />
 
-```python
-eps = 1e-6
-R0 = (Id / (L_hat + eps)).clamp(0,1)
-```
 依 Retinex 理論 <img width="155" height="28" alt="Screenshot 2025-09-29 at 9 55 08 PM" src="https://github.com/user-attachments/assets/f102306d-8ae2-4d3a-9098-179f9b8ad98a" /> 解耦亮度，得到初始反射 <img width="28" height="27" alt="Screenshot 2025-09-29 at 9 55 34 PM" src="https://github.com/user-attachments/assets/3781cdfb-36ea-48e4-9de7-e3d45abc2b04" />。
 
 ---
@@ -159,11 +129,6 @@ At the bottleneck feature <img width="162" height="29" alt="Screenshot 2025-09-2
 For encoder features <img width="149" height="35" alt="Screenshot 2025-09-29 at 9 36 34 PM" src="https://github.com/user-attachments/assets/35cbe876-04d3-4539-ac2e-4afe475fbd68" />:
 <img width="483" height="55" alt="Screenshot 2025-09-29 at 9 36 52 PM" src="https://github.com/user-attachments/assets/84fe1294-b2bb-4281-af17-e08a87a2429b" />
 
-```python
-# Two gates at e2/e3 scales
-r2 = self.gate2(r2, L_hat)  
-r3 = self.gate3(r3, L_hat)
-```
 把 <img width="23" height="27" alt="Screenshot 2025-09-29 at 9 37 17 PM" src="https://github.com/user-attachments/assets/a2da9a4f-ca0e-469e-b28d-acdc852d51fe" /> 下採樣並投影到相同通道，Sigmoid 成 0~1 的門控圖，逐像素抑制暗區/亮區的錯誤增益。
 
 #### Decoder + head
@@ -171,9 +136,6 @@ r3 = self.gate3(r3, L_hat)
 Upsample + skip concat + DW blocks; head is (1\times1) (+ optional Sigmoid):
 <img width="273" height="51" alt="Screenshot 2025-09-29 at 9 37 33 PM" src="https://github.com/user-attachments/assets/35fab707-6767-4b3a-b779-0201681b98b2" />
 
-```python
-self.refl_head = nn.Sequential(nn.Conv2d(48,3,1), nn.Sigmoid())
-```
 解碼後輸出反射 <img width="17" height="28" alt="Screenshot 2025-09-29 at 9 37 47 PM" src="https://github.com/user-attachments/assets/cb217d1a-fbb2-406b-85e0-767f133d7f40" />；通常配合值域採用 Sigmoid。
 
 ---
@@ -183,11 +145,6 @@ self.refl_head = nn.Sequential(nn.Conv2d(48,3,1), nn.Sigmoid())
 Instead of directly <img width="59" height="24" alt="Screenshot 2025-09-29 at 9 48 02 PM" src="https://github.com/user-attachments/assets/083ff895-0471-4313-8bfd-a5520ac79b6d" />, we do residual locking to stabilize color/contrast:
 
 <img width="329" height="50" alt="Screenshot 2025-09-29 at 9 48 16 PM" src="https://github.com/user-attachments/assets/fbaebcce-21df-4044-b80e-c5ab2d898052" />
-
-```python
-I_hat = (Id + (L_hat * R_hat - Id)).clamp(0,1)
-```
-以「替代圖 − 原圖」為殘差更新，顏色更穩定、收斂較快。
 
 ---
 
@@ -221,10 +178,6 @@ SSIM (windowed) with constants (C_1, C_2):
 
 <img width="307" height="39" alt="Screenshot 2025-09-29 at 9 39 51 PM" src="https://github.com/user-attachments/assets/7d609dc6-0e33-47cd-bde4-3b06f7c4ac51" />
 
-```python
-w1,w2,w3,w4 = 1.0, 0.5, 0.1, 0.1
-loss = w1*L1 + w2*SSIM + w3*TV(L_hat) + w4*Spec(I_hat, I_gt)
-```
 四項加權：像素、結構、光照平滑、頻域一致。
 
 ---
