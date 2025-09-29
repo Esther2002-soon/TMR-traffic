@@ -22,10 +22,7 @@ NightCity dataset
 ### 1.2 Rain layer estimation / 雨層估計
 
 We estimate a rain-only layer by a simple positive residual between a rainy image (I^{\text{rainy}}) and its clean mate (I^{\text{clean}}) (both in ([0,1])):
-
-[
-\boxed{R = \mathrm{clip}\big(I^{\text{rainy}} - I^{\text{clean}},,0,,1\big)} \tag{1}
-]
+<img width="283" height="47" alt="Screenshot 2025-09-29 at 9 30 37 PM" src="https://github.com/user-attachments/assets/d7992b56-4837-41b7-9f5a-1e17679f3869" />
 ```python
 R = (rainy - clean).clamp(0, 1)   # thresholding if needed
 ```
@@ -36,32 +33,23 @@ R = (rainy - clean).clamp(0, 1)   # thresholding if needed
 ### 1.3 Low-light rendering by gamma / 以 γ 調暗
 
 Nighttime low illumination is synthesized by gamma compression:
-
-[
-\boxed{I_{\gamma} = C^{\gamma}}, \qquad \gamma \sim \mathcal{U}(\gamma_{\min},\gamma_{\max}),\ \gamma>1. \tag{2}
-]
-
-Typical range: (\gamma\in[1.8,3.0]).
+<img width="557" height="102" alt="Screenshot 2025-09-29 at 9 31 01 PM" src="https://github.com/user-attachments/assets/ff660549-c34a-4b76-8f41-5813830ab906" />
 
 ```python
 gamma = random.uniform(args.gamma_min, args.gamma_max)  # >>> EDIT HERE <<<
 I_gamma = C.clamp(0,1).pow(gamma)
 ```
-用冪次（(\gamma>1)）將影像壓暗，模擬低照度。
+用冪次<img width="75" height="27" alt="Screenshot 2025-09-29 at 9 31 17 PM" src="https://github.com/user-attachments/assets/4f860776-3ea0-458b-b8ea-1d405cb877da" />將影像壓暗，模擬低照度。
 
 ---
 
 ### 1.4 Rain composition / 雨層合成
 
-We blend the rain layer additively with a strength (s\in[0,1]):
-
-[
-\boxed{I_{\text{rain}} = \mathrm{clip}\big(I_{\gamma} + s,R,,0,,1\big)},\quad s\sim\mathcal{U}(s_{\min},s_{\max}). \tag{3}
-]
+We blend the rain layer additively with a strength <img width="93" height="25" alt="Screenshot 2025-09-29 at 9 31 35 PM" src="https://github.com/user-attachments/assets/8416e6cc-1356-4827-906b-c0c5e43bd3a2" />
+<img width="449" height="49" alt="Screenshot 2025-09-29 at 9 31 48 PM" src="https://github.com/user-attachments/assets/1cba677e-d8c0-49f0-bfe0-2c8515913d01" />
 
 (Optionally alpha-composite via a luminance mask (A) if your code supports it:
-(I_{\text{rain}}=(1-A),I_{\gamma} + A,\mathrm{clip}(I_{\gamma}+R,0,1)).)
-
+<img width="374" height="36" alt="Screenshot 2025-09-29 at 9 32 00 PM" src="https://github.com/user-attachments/assets/443af6b0-e4d9-43e9-a383-03c6927ae5f2" />
 ```python
 s = random.uniform(0.5, 1.0)  # >>> EDIT HERE <<<
 I_rain = (I_gamma + s*R).clamp(0,1)
@@ -73,16 +61,14 @@ I_rain = (I_gamma + s*R).clamp(0,1)
 ### 1.5 Motion blur / 運動模糊
 
 Convolve with a random linear motion kernel (K) of length (L) and angle (\theta):
-
-[
-\boxed{I_{\text{blur}} = K * I_{\text{rain}}},\qquad K = \text{PSF}(L,\theta),\ \sum K=1. \tag{4}
-]
+<img width="469" height="47" alt="Screenshot 2025-09-29 at 9 32 20 PM" src="https://github.com/user-attachments/assets/7050ba37-0d41-445d-ba90-2b9c427016df" />
 
 ```python
 L = random.randint(args.blur_len_min, args.blur_len_max)  # >>> EDIT HERE <<<
 theta = random.uniform(0,180)
 K = make_linear_motion_kernel(L, theta)
 I_blur = conv2d_same(I_rain, K)  # normalized kernel
+
 ```
 用線性運動模糊核卷積影像，核長 (L)、角度 (\theta)，核須歸一化。
 
@@ -90,12 +76,7 @@ I_blur = conv2d_same(I_rain, K)  # normalized kernel
 
 ### 1.6 Sensor noise / 感測雜訊
 
-Add small Gaussian noise (n\sim\mathcal{N}(0,\sigma^2)):
-
-[
-\boxed{I_{d} = \mathrm{clip}\big(I_{\text{blur}} + n,,0,,1\big)},\qquad n\sim\mathcal{N}(0,\sigma^2). \tag{5}
-]
-
+<img width="570" height="98" alt="Screenshot 2025-09-29 at 9 32 43 PM" src="https://github.com/user-attachments/assets/e8ae6214-ed2d-4623-8688-16f98e2b0aa3" />
 ```python
 sigma = args.noise_std  # >>> EDIT HERE <<<
 noise = torch.randn_like(I_blur) * sigma
@@ -107,11 +88,8 @@ Id = (I_blur + noise).clamp(0,1)
 
 ### 1.7 Summary of synthesis / 合成流程總結
 
-[
-\boxed{
-I_d = \big(K * (C^{\gamma} + sR)\big) + n \quad \xrightarrow{\ \text{clip}\ } [0,1].
-} \tag{6}
-]
+<img width="400" height="60" alt="Screenshot 2025-09-29 at 9 33 27 PM" src="https://github.com/user-attachments/assets/862342aa-1c51-428b-9c8a-a146540ed23e" />
+
 先壓暗、加雨、再模糊、加雜訊，最後夾住 ([0,1])。
 
 <img width="309" height="313" alt="image" src="https://github.com/user-attachments/assets/34f46e3f-2a78-4075-bf63-05d7bd51e0d7" />
@@ -124,8 +102,8 @@ I_d = \big(K * (C^{\gamma} + sR)\big) + n \quad \xrightarrow{\ \text{clip}\ } [0
 ### 2.1 Overall pipeline / 整體流程
 <img width="698" height="337" alt="image" src="https://github.com/user-attachments/assets/6b296474-a8c6-43c3-8a2f-fce4abc1a60e" />
 
-1. **Illumination branch (U-Net)** predicts illumination (\hat L).
-2. **Retinex division** initializes reflectance (R_0 = \frac{I_d}{\hat L+\varepsilon}).
+1. **Illumination branch (U-Net)** predicts illumination <img width="18" height="33" alt="Screenshot 2025-09-29 at 9 33 56 PM" src="https://github.com/user-attachments/assets/6bb3319b-bcb0-4459-bb78-5d46325b47fd" />.
+2. **Retinex division** initializes reflectance <img width="89" height="40" alt="Screenshot 2025-09-29 at 9 34 10 PM" src="https://github.com/user-attachments/assets/f27628b5-7ea5-4994-869f-4b2f93ec4889" />.
 3. **Reflectance branch** refines reflectance with
    (a) **Spectral Block** (learnable FFT magnitude mask) and
    (b) **GatedFuse** (illumination-guided gating).
@@ -139,29 +117,20 @@ I_d = \big(K * (C^{\gamma} + sR)\big) + n \quad \xrightarrow{\ \text{clip}\ } [0
 #### Depthwise separable block（DWConvBlock）
 
 A depthwise conv (W_d) followed by pointwise (1\times1) conv (W_p) and activation:
-
-[
-\boxed{
-\mathrm{DW}(x)=\phi!\Big(\mathrm{BN}\big(W_p*(W_d \star x)\big)\Big)
-} \tag{7}
-]
+<img width="334" height="65" alt="Screenshot 2025-09-29 at 9 34 48 PM" src="https://github.com/user-attachments/assets/54d4c69e-f458-480a-a0a2-8d1a6b38a02b" />
 
 * Encoder: 3 stages .
 * Decoder: upsample + skip concat; two DW blocks per stage.
 * Head: (1\times1) conv + Sigmoid:
+<img width="336" height="56" alt="Screenshot 2025-09-29 at 9 35 02 PM" src="https://github.com/user-attachments/assets/65633ce2-668f-40a4-93e7-14132be9155f" />
 
-[
-\boxed{\hat L = \sigma!\big(W_{1\times1}*F_{\text{dec}}\big)\in[0,1]^{3\times H\times W}} \tag{8}
-]
 用 DW 可大幅降參數與 FLOPs；每個 stage 疊兩次 DW 擴大有效感受野與表達力；最後 (1\times1) + Sigmoid 輸出光照圖 (\hat L)。
 
 ---
 
 ### 2.3 Retinex division / Retinex 分解
 
-[
-\boxed{R_0=\mathrm{clamp}!\left(\frac{I_d}{\hat L+\varepsilon},,0,,1\right)} \tag{9}
-]
+<img width="277" height="75" alt="Screenshot 2025-09-29 at 9 35 15 PM" src="https://github.com/user-attachments/assets/3504be92-d382-4283-b356-4be3f2755109" />
 
 ```python
 eps = 1e-6
@@ -175,52 +144,34 @@ R0 = (Id / (L_hat + eps)).clamp(0,1)
 
 #### (a) Spectral Block（learnable FFT magnitude mask）
 
-At the bottleneck feature (r_3\in\mathbb{R}^{B\times C\times H_s\times W_s}):
+At the bottleneck feature <img width="162" height="29" alt="Screenshot 2025-09-29 at 9 35 47 PM" src="https://github.com/user-attachments/assets/89f4c4a4-4b5b-4fe3-beeb-34ec51206420" />:
+<img width="507" height="144" alt="Screenshot 2025-09-29 at 9 35 31 PM" src="https://github.com/user-attachments/assets/7d99f667-940b-47cb-b859-8dc94a2ac9ec" />
 
-[
-\begin{aligned}
-&z=W_{1\times1}*r_3,\quad X=\mathcal{F}(z)=\mathrm{rfft2}(z) \
-&A=\lvert X\rvert,\ \Phi=\angle X,\ \ M=2,\sigma\big(\mathrm{interp}(\Theta)\big)\in(0,2) \
-&\tilde A = M\odot A,\quad \tilde X=\tilde A,e^{j\Phi},\quad
-z'=\mathcal{F}^{-1}(\tilde X)=\mathrm{irfft2}(\tilde X) \
-&\boxed{r_3'=\phi!\big(W'_{1\times1}*z'\big)}
-\end{aligned} \tag{10}
-]
-
-* Optional **DC lock**: (M[...,0,0]=1).
-* Mask resolution ((h,w)) is upsampled to ((H_s, W_s/2+1)).
+* Optional **DC lock**: <img width="139" height="31" alt="Screenshot 2025-09-29 at 9 36 06 PM" src="https://github.com/user-attachments/assets/536e7678-3c3d-4ff8-8afa-2e38d890c02a" />.
+* Mask resolution ((h,w)) is upsampled to <img width="143" height="36" alt="Screenshot 2025-09-29 at 9 36 18 PM" src="https://github.com/user-attachments/assets/d6e1d317-2755-40e2-bb5e-2410eee7f5a0" />.
 在頻域以可學遮罩 (M) 重加權幅值（不改相位），抑制雨條的窄帶頻率，保持幾何結構。
 
 #### (b) Illumination-guided GatedFuse（two scales）
 
-For encoder features (r_k) (e.g., (k=2,3)):
-
-[
-\boxed{
-\text{gate}_k=\sigma!\big(W_g^{(k)} * \mathrm{Resize}(\hat L)\big),\qquad
-\tilde r_k=r_k\odot \text{gate}_k.
-} \tag{11}
-]
+For encoder features <img width="149" height="35" alt="Screenshot 2025-09-29 at 9 36 34 PM" src="https://github.com/user-attachments/assets/35cbe876-04d3-4539-ac2e-4afe475fbd68" />:
+<img width="483" height="55" alt="Screenshot 2025-09-29 at 9 36 52 PM" src="https://github.com/user-attachments/assets/84fe1294-b2bb-4281-af17-e08a87a2429b" />
 
 ```python
 # Two gates at e2/e3 scales
 r2 = self.gate2(r2, L_hat)  
 r3 = self.gate3(r3, L_hat)
 ```
-把 (\hat L) 下採樣並投影到相同通道，Sigmoid 成 0~1 的門控圖，逐像素抑制暗區/亮區的錯誤增益。
+把 <img width="23" height="27" alt="Screenshot 2025-09-29 at 9 37 17 PM" src="https://github.com/user-attachments/assets/a2da9a4f-ca0e-469e-b28d-acdc852d51fe" /> 下採樣並投影到相同通道，Sigmoid 成 0~1 的門控圖，逐像素抑制暗區/亮區的錯誤增益。
 
 #### Decoder + head
 
 Upsample + skip concat + DW blocks; head is (1\times1) (+ optional Sigmoid):
-
-[
-\boxed{\hat R = \sigma!\big(W^{\text{refl}}*{1\times1}*F^{\text{refl}}*{\text{dec}}\big)\in[0,1]} \tag{12}
-]
+<img width="273" height="51" alt="Screenshot 2025-09-29 at 9 37 33 PM" src="https://github.com/user-attachments/assets/35fab707-6767-4b3a-b779-0201681b98b2" />
 
 ```python
 self.refl_head = nn.Sequential(nn.Conv2d(48,3,1), nn.Sigmoid())
 ```
-解碼後輸出反射 (\hat R)；通常配合值域採用 Sigmoid。
+解碼後輸出反射 <img width="17" height="28" alt="Screenshot 2025-09-29 at 9 37 47 PM" src="https://github.com/user-attachments/assets/cb217d1a-fbb2-406b-85e0-767f133d7f40" />；通常配合值域採用 Sigmoid。
 
 ---
 
@@ -243,55 +194,33 @@ I_hat = (Id + (L_hat * R_hat - Id)).clamp(0,1)
 
 ## 3) Objective functions / 損失函數
 
-Let (I_{gt}) be the clean GT.
+Let <img width="30" height="32" alt="Screenshot 2025-09-29 at 9 38 04 PM" src="https://github.com/user-attachments/assets/dd833100-4c52-48e2-bebf-a890d36b4833" /> be the clean GT.
 
 ### 3.1 Pixel & SSIM（像素與結構相似度）
 
-[
-\boxed{\mathcal{L}*{\text{L1}} = \lVert \hat I - I*{gt}\rVert_1} \tag{14}
-]
+<img width="181" height="52" alt="Screenshot 2025-09-29 at 9 38 24 PM" src="https://github.com/user-attachments/assets/a0718fd9-ff41-4b71-913d-96ab953403bb" />
 
 SSIM (windowed) with constants (C_1, C_2):
 
-[
-\boxed{\mathrm{SSIM}(x,y)=\frac{(2\mu_x\mu_y+C_1)(2\sigma_{xy}+C_2)}{(\mu_x^2+\mu_y^2+C_1)(\sigma_x^2+\sigma_y^2+C_2)}},\quad
-\mathcal{L}*{\text{SSIM}} = 1-\mathrm{SSIM}(\hat I, I*{gt}). \tag{15}
-]
+<img width="508" height="59" alt="Screenshot 2025-09-29 at 9 38 57 PM" src="https://github.com/user-attachments/assets/8bcdf0ff-ecc6-4072-8484-3258271e1490" />
+
 像素 L1 與 SSIM（以視覺結構一致性為主）。
 
 ### 3.2 Total variation on illumination / 光照平滑 TV
 
-[
-\boxed{
-\mathcal{L}*{\text{TV}}(\hat L)=
-\lambda*{\text{TV}}!\Bigg(\frac{1}{N}!\sum!\lvert \hat L_{i,j+1}-\hat L_{i,j}\rvert +
-\frac{1}{N}!\sum!\lvert \hat L_{i+1,j}-\hat L_{i,j}\rvert\Bigg)
-} \tag{16}
-]
+<img width="412" height="65" alt="Screenshot 2025-09-29 at 9 39 22 PM" src="https://github.com/user-attachments/assets/e1668e18-6456-42cb-b466-6a34fec35078" />
+
 對 (\hat L) 加總變分以去除鋸齒與雜訊。
 
 ### 3.3 Spectral magnitude loss / 頻幅一致性
 
-[
-\boxed{
-\mathcal{L}*{\text{spec}}(\hat I, I*{gt})=
-\lambda_{\text{spec}},
-\big|,\lvert \mathcal{F}(\hat I)\rvert - \lvert \mathcal{F}(I_{gt})\rvert,\big|_1
-} \tag{17}
-]
+<img width="291" height="38" alt="Screenshot 2025-09-29 at 9 39 37 PM" src="https://github.com/user-attachments/assets/bab3b3e1-53d3-45ac-b84f-f9af1f040c8d" />
+
 使輸出與 GT 在頻域幅值分布一致，有助於去除週期性雨條與條紋。
 
 ### 3.4 Total loss / 總損失
 
-[
-\boxed{
-\mathcal{L} =
-\lambda_1,\mathcal{L}*{\text{L1}} +
-\lambda_2,\mathcal{L}*{\text{SSIM}} +
-\lambda_3,\mathcal{L}*{\text{TV}} +
-\lambda_4,\mathcal{L}*{\text{spec}}.
-} \tag{18}
-]
+<img width="307" height="39" alt="Screenshot 2025-09-29 at 9 39 51 PM" src="https://github.com/user-attachments/assets/7d609dc6-0e33-47cd-bde4-3b06f7c4ac51" />
 
 ```python
 w1,w2,w3,w4 = 1.0, 0.5, 0.1, 0.1
@@ -305,17 +234,7 @@ loss = w1*L1 + w2*SSIM + w3*TV(L_hat) + w4*Spec(I_hat, I_gt)
 
 <img width="698" height="337" alt="image" src="https://github.com/user-attachments/assets/6b296474-a8c6-43c3-8a2f-fce4abc1a60e" />
 
-* **Illumination U-Net**
-
-  * Encoder: (3!\to!32!\to!64!\to!128) @ (H!\to!H/2!\to!H/4)
-  * Decoder: upsample + skip; head (1\times1) + Sigmoid (\Rightarrow \hat L)
-* **Retinex division** (R_0=I_d/(\hat L+\varepsilon))
-* **Reflectance encoder** (3!\to!48!\to!96!\to!192)
-* **Spectral Block (H/4)** on (C{=}192)
-* **GatedFuse** at (H/2) and (H/4)
-* **Reflectance decoder** → head (1\times1) (+ Sigmoid) (\Rightarrow \hat R)
-* **Residual compose** (\hat I = \mathrm{clip}(I_d + (\hat L\hat R - I_d)))
-
+<img width="384" height="201" alt="Screenshot 2025-09-29 at 9 40 16 PM" src="https://github.com/user-attachments/assets/f0e40929-5d0d-4b91-8eb2-547b18bc0ff8" />
 
 ## 🔹 架構元件解釋
 1. **Illumination U-Net**
