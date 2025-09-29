@@ -118,6 +118,7 @@ Id = (I_blur + noise).clamp(0,1)
 #### Depthwise separable block（DWConvBlock）
 
 A depthwise conv (W_d) followed by pointwise (1\times1) conv (W_p) and activation:
+
 <img width="334" height="65" alt="Screenshot 2025-09-29 at 9 34 48 PM" src="https://github.com/user-attachments/assets/54d4c69e-f458-480a-a0a2-8d1a6b38a02b" />
 
 * Encoder: 3 stages .
@@ -125,7 +126,7 @@ A depthwise conv (W_d) followed by pointwise (1\times1) conv (W_p) and activatio
 * Head: (1\times1) conv + Sigmoid:
 <img width="336" height="56" alt="Screenshot 2025-09-29 at 9 35 02 PM" src="https://github.com/user-attachments/assets/65633ce2-668f-40a4-93e7-14132be9155f" />
 
-用 DW 可大幅降參數與 FLOPs；每個 stage 疊兩次 DW 擴大有效感受野與表達力；最後 (1\times1) + Sigmoid 輸出光照圖 (\hat L)。
+用 DW 可大幅降參數與 FLOPs；每個 stage 疊兩次 DW 擴大有效感受野與表達力；最後 (1\times1) + Sigmoid 輸出光照圖 <img width="18" height="29" alt="Screenshot 2025-09-29 at 9 47 31 PM" src="https://github.com/user-attachments/assets/6c074208-b753-4c92-897f-4ac67b01eeea" />。
 
 ---
 
@@ -178,13 +179,9 @@ self.refl_head = nn.Sequential(nn.Conv2d(48,3,1), nn.Sigmoid())
 
 ### 2.5 Residual composition / 殘差合成
 
-Instead of directly (\hat L\odot\hat R), we do residual locking to stabilize color/contrast:
+Instead of directly <img width="59" height="24" alt="Screenshot 2025-09-29 at 9 48 02 PM" src="https://github.com/user-attachments/assets/083ff895-0471-4313-8bfd-a5520ac79b6d" />, we do residual locking to stabilize color/contrast:
 
-[
-\boxed{
-\hat I = \mathrm{clip}!\big(I_d + (\hat L\odot\hat R - I_d),,0,,1\big).
-} \tag{13}
-]
+<img width="329" height="50" alt="Screenshot 2025-09-29 at 9 48 16 PM" src="https://github.com/user-attachments/assets/fbaebcce-21df-4044-b80e-c5ab2d898052" />
 
 ```python
 I_hat = (Id + (L_hat * R_hat - Id)).clamp(0,1)
