@@ -138,7 +138,7 @@ A depthwise conv (W_d) followed by pointwise (1\times1) conv (W_p) and activatio
 eps = 1e-6
 R0 = (Id / (L_hat + eps)).clamp(0,1)
 ```
-依 Retinex 理論 (I=L!\odot!R)，以 (\hat L) 解耦亮度，得到初始反射 (R_0)。
+依 Retinex 理論 <img width="155" height="28" alt="Screenshot 2025-09-29 at 9 55 08 PM" src="https://github.com/user-attachments/assets/f102306d-8ae2-4d3a-9098-179f9b8ad98a" /> 解耦亮度，得到初始反射 <img width="28" height="27" alt="Screenshot 2025-09-29 at 9 55 34 PM" src="https://github.com/user-attachments/assets/3781cdfb-36ea-48e4-9de7-e3d45abc2b04" />。
 
 ---
 
