@@ -23,6 +23,7 @@ NightCity dataset
 
 We estimate a rain-only layer by a simple positive residual between a rainy image <img width="51" height="32" alt="Screenshot 2025-09-29 at 9 42 28 PM" src="https://github.com/user-attachments/assets/e136515d-7ab6-4f4e-baed-dae966ef9805" /> and its clean mate <img width="174" height="28" alt="Screenshot 2025-09-29 at 9 42 45 PM" src="https://github.com/user-attachments/assets/814717b3-4277-4cd6-bece-2450778e927d" />
 <img width="283" height="47" alt="Screenshot 2025-09-29 at 9 30 37 PM" src="https://github.com/user-attachments/assets/d7992b56-4837-41b7-9f5a-1e17679f3869" />
+
 由雨天影像與乾淨影像相減取正值，得到雨層 (R)，再夾住於 ([0,1])。
 
 ---
@@ -31,6 +32,7 @@ We estimate a rain-only layer by a simple positive residual between a rainy imag
 
 Nighttime low illumination is synthesized by gamma compression:
 <img width="557" height="102" alt="Screenshot 2025-09-29 at 9 31 01 PM" src="https://github.com/user-attachments/assets/ff660549-c34a-4b76-8f41-5813830ab906" />
+
 用冪次<img width="75" height="27" alt="Screenshot 2025-09-29 at 9 31 17 PM" src="https://github.com/user-attachments/assets/4f860776-3ea0-458b-b8ea-1d405cb877da" />將影像壓暗，模擬低照度。
 
 ---
@@ -42,6 +44,7 @@ We blend the rain layer additively with a strength <img width="93" height="25" a
 
 (Optionally alpha-composite via a luminance mask (A) if your code supports it:
 <img width="374" height="36" alt="Screenshot 2025-09-29 at 9 32 00 PM" src="https://github.com/user-attachments/assets/443af6b0-e4d9-43e9-a383-03c6927ae5f2" />
+
 以強度 (s) 將雨層加到暗化後影像上；可改為 alpha 合成。
 
 ---
@@ -50,6 +53,7 @@ We blend the rain layer additively with a strength <img width="93" height="25" a
 
 Convolve with a random linear motion kernel (K) of length (L) and angle (\theta):
 <img width="469" height="47" alt="Screenshot 2025-09-29 at 9 32 20 PM" src="https://github.com/user-attachments/assets/7050ba37-0d41-445d-ba90-2b9c427016df" />
+
 用線性運動模糊核卷積影像，核長 (L)、角度 <img width="12" height="22" alt="Screenshot 2025-09-29 at 9 44 30 PM" src="https://github.com/user-attachments/assets/ad9843cd-27be-4e42-840d-b0d9755657fb" />，核須歸一化。
 
 ---
@@ -57,6 +61,7 @@ Convolve with a random linear motion kernel (K) of length (L) and angle (\theta)
 ### 1.6 Sensor noise / 感測雜訊
 
 <img width="570" height="98" alt="Screenshot 2025-09-29 at 9 32 43 PM" src="https://github.com/user-attachments/assets/e8ae6214-ed2d-4623-8688-16f98e2b0aa3" />
+
 加入高斯雜訊並夾住範圍，得到退化影像 <img width="22" height="27" alt="Screenshot 2025-09-29 at 9 45 17 PM" src="https://github.com/user-attachments/assets/09323340-655e-4398-9e88-f99bc6172cab" />。**配對標註**即為 (GT=C)。
 
 ---
