@@ -123,10 +123,10 @@ A depthwise conv (W_d) followed by pointwise (1\times1) conv (W_p) and activatio
 
 * Encoder: 3 stages .
 * Decoder: upsample + skip concat; two DW blocks per stage.
-* Head: (1\times1) conv + Sigmoid:
+* Head: 1 x 1 conv + Sigmoid:
 <img width="336" height="56" alt="Screenshot 2025-09-29 at 9 35 02 PM" src="https://github.com/user-attachments/assets/65633ce2-668f-40a4-93e7-14132be9155f" />
 
-用 DW 可大幅降參數與 FLOPs；每個 stage 疊兩次 DW 擴大有效感受野與表達力；最後 (1\times1) + Sigmoid 輸出光照圖 <img width="18" height="29" alt="Screenshot 2025-09-29 at 9 47 31 PM" src="https://github.com/user-attachments/assets/6c074208-b753-4c92-897f-4ac67b01eeea" />。
+用 DW 可大幅降參數與 FLOPs；每個 stage 疊兩次 DW 擴大有效感受野與表達力；最後 1 x 1 + Sigmoid 輸出光照圖 <img width="18" height="29" alt="Screenshot 2025-09-29 at 9 47 31 PM" src="https://github.com/user-attachments/assets/6c074208-b753-4c92-897f-4ac67b01eeea" />。
 
 ---
 
@@ -147,6 +147,7 @@ R0 = (Id / (L_hat + eps)).clamp(0,1)
 #### (a) Spectral Block（learnable FFT magnitude mask）
 
 At the bottleneck feature <img width="162" height="29" alt="Screenshot 2025-09-29 at 9 35 47 PM" src="https://github.com/user-attachments/assets/89f4c4a4-4b5b-4fe3-beeb-34ec51206420" />:
+
 <img width="507" height="144" alt="Screenshot 2025-09-29 at 9 35 31 PM" src="https://github.com/user-attachments/assets/7d99f667-940b-47cb-b859-8dc94a2ac9ec" />
 
 * Optional **DC lock**: <img width="139" height="31" alt="Screenshot 2025-09-29 at 9 36 06 PM" src="https://github.com/user-attachments/assets/536e7678-3c3d-4ff8-8afa-2e38d890c02a" />.
@@ -237,10 +238,10 @@ loss = w1*L1 + w2*SSIM + w3*TV(L_hat) + w4*Spec(I_hat, I_gt)
 ## 🔹 架構元件解釋
 1. **Illumination U-Net**
    * **在做什麼**：這個分支像是「手電筒」，專門去估計每個像素有多少光線（亮度）。
-   * **為什麼重要**：有了光照圖 (\hat L)，我們就能知道哪裡是暗區、哪裡是亮區，這是後面 Retinex 分解和門控的基礎。
+   * **為什麼重要**：有了光照圖 <img width="16" height="28" alt="Screenshot 2025-09-29 at 9 51 04 PM" src="https://github.com/user-attachments/assets/a70aa7e0-7eef-4f8f-8ad0-10d6e494d099" />，我們就能知道哪裡是暗區、哪裡是亮區，這是後面 Retinex 分解和門控的基礎。
      
 2. **Retinex division**
-   * **在做什麼**：把原始影像 (I_d) 除以光照 (\hat L)，得到初步的材質/反射層 (R_0)。
+   * **在做什麼**：把原始影像 <img width="23" height="25" alt="Screenshot 2025-09-29 at 9 51 19 PM" src="https://github.com/user-attachments/assets/5fe68f65-8c28-4d71-90ba-9ebdb329c5ea" /> 除以光照 <img width="16" height="28" alt="Screenshot 2025-09-29 at 9 51 04 PM" src="https://github.com/user-attachments/assets/a70aa7e0-7eef-4f8f-8ad0-10d6e494d099" />，得到初步的材質/反射層 <img width="23" height="27" alt="Screenshot 2025-09-29 at 9 52 47 PM" src="https://github.com/user-attachments/assets/9392f522-0f38-4919-972a-0274ac6f68b4" />。
    * **為什麼重要**：這一步把「光」和「材質」分開，讓後面的反射分支不用再管亮暗，只專注處理紋理和雨痕。
 
 3. **Reflectance encoder**
@@ -252,15 +253,15 @@ loss = w1*L1 + w2*SSIM + w3*TV(L_hat) + w4*Spec(I_hat, I_gt)
    * **為什麼重要**：雨條在頻域裡有固定的窄帶特徵，這個模組就像「耳塞」，把那種噪音過濾掉，但保留畫面原本的形狀。
 
 5. **GatedFuse (H/2, H/4)**
-   * **在做什麼**：用光照圖 (\hat L) 生成「閘門」，告訴反射分支在某些區域要加強，某些區域要抑制。
+   * **在做什麼**：用光照圖 <img width="16" height="28" alt="Screenshot 2025-09-29 at 9 51 04 PM" src="https://github.com/user-attachments/assets/a70aa7e0-7eef-4f8f-8ad0-10d6e494d099" /> 生成「閘門」，告訴反射分支在某些區域要加強，某些區域要抑制。
    * **為什麼重要**：暗的地方避免放大雜訊，亮的地方避免把雨痕誤當紋理，相當於「光照導遊」幫忙調整。
 
 6. **Reflectance decoder**
-   * **在做什麼**：把壓縮後的反射特徵再放大回原圖大小，重建出乾淨的反射圖 (\hat R)。
+   * **在做什麼**：把壓縮後的反射特徵再放大回原圖大小，重建出乾淨的反射圖 <img width="20" height="29" alt="Screenshot 2025-09-29 at 9 52 59 PM" src="https://github.com/user-attachments/assets/859561a3-4bde-4783-803b-2dc6f47b4c7d" />。
    * **為什麼重要**：這一步就是「把抽象特徵翻譯回影像」，並用最後的 1×1 卷積 + Sigmoid 限制在正常的 RGB 範圍。
 
 7. **Residual compose**
-   * **在做什麼**：把原圖 (I_d) 和修復後的光照 × 反射結果 (\hat L \hat R) 混在一起，用殘差方式輸出最終復原影像 (\hat I)。
+   * **在做什麼**：把原圖 <img width="26" height="27" alt="Screenshot 2025-09-29 at 9 52 18 PM" src="https://github.com/user-attachments/assets/2e245030-4ce1-45ed-8c18-b323d231d616" /> 和修復後的光照 × 反射結果 <img width="16" height="28" alt="Screenshot 2025-09-29 at 9 51 04 PM" src="https://github.com/user-attachments/assets/a70aa7e0-7eef-4f8f-8ad0-10d6e494d099" /> 混在一起，用殘差方式輸出最終復原影像 <img width="12" height="23" alt="Screenshot 2025-09-29 at 9 52 04 PM" src="https://github.com/user-attachments/assets/d1f6144f-d963-4ebd-be89-d3d833ffbd87" />。
    * **為什麼重要**：這樣能保留顏色與對比，不會修過頭，收斂也更穩定。
 
 👉 白話版：
