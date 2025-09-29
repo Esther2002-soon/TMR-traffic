@@ -9,7 +9,7 @@ NightCity dataset
 
 ### 1.1 Inputs & Notation
 
-* Clean base image (C\in[0,1]^{3\times H\times W}) from NightCity (RGB float32).
+* Clean base image <img width="157" height="33" alt="Screenshot 2025-09-29 at 9 29 37 PM" src="https://github.com/user-attachments/assets/10dfa074-b8ee-44a9-8e9f-019a5a0fa8e4" />from NightCity (RGB float32).
 * Rain/clean pairs from Rain100L to **extract a rain layer** (R).
 * Optional blur kernel (K) and Gaussian noise (n).
 
@@ -113,8 +113,8 @@ I_d = \big(K * (C^{\gamma} + sR)\big) + n \quad \xrightarrow{\ \text{clip}\ } [0
 } \tag{6}
 ]
 先壓暗、加雨、再模糊、加雜訊，最後夾住 ([0,1])。
-<img width="309" height="313" alt="image" src="https://github.com/user-attachments/assets/34f46e3f-2a78-4075-bf63-05d7bd51e0d7" />
 
+<img width="309" height="313" alt="image" src="https://github.com/user-attachments/assets/34f46e3f-2a78-4075-bf63-05d7bd51e0d7" />
 <img width="309" height="313" alt="image" src="https://github.com/user-attachments/assets/bf1e446e-8783-4c16-93c6-462b32fb77c7" />
 
 ---
